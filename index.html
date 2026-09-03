@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1"
+>
+
+<title>HK Air Quality Monitor</title>
+
+<style>
+
+* {
+  box-sizing:border-box;
+}
+
+body {
+  margin:0;
+  background:#f4f7fb;
+  color:#111827;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Arial,
+    sans-serif;
+}
+
+.header {
+  background:
+    linear-gradient(
+      135deg,
+      #111827,
+      #1f2937
+    );
+
+  color:white;
+  padding:30px 20px;
+  text-align:center;
+}
+
+.header h1 {
+  margin:0;
+  font-size:30px;
+  font-weight:800;
+}
+
+.header p {
+  margin:8px 0 0;
+  opacity:.7;
+}
+
+.container {
+  max-width:1100px;
+  margin:auto;
+  padding:18px;
+}
+
+.status {
+  background:white;
+  border-radius:16px;
+  padding:16px 18px;
+  margin-bottom:18px;
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  flex-wrap:wrap;
+  box-shadow:
+    0 5px 20px rgba(0,0,0,.05);
+}
+
+.online {
+  color:#16a34a;
+  font-weight:700;
+}
+
+.offline {
+  color:#dc2626;
+  font-weight:700;
+}
+
+.aqi {
+  background:white;
+  border-radius:22px;
+  text-align:center;
+  padding:30px;
+  margin-bottom:18px;
+  box-shadow:
+    0 7px 25px rgba(0,0,0,.07);
+}
+
+.aqiTitle {
+  color:#6b7280;
+  font-size:13px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+}
+
+.aqiNumber {
+  font-size:78px;
+  font-weight:800;
+  line-height:1;
+  margin:12px 0;
+}
+
+.category {
+  display:inline-block;
+  padding:8px 20px;
+  border-radius:50px;
+  background:#dcfce7;
+  color:#166534;
+  font-weight:700;
+}
+
+.note {
+  margin-top:14px;
+  color:#6b7280;
+  font-size:13px;
+}
+
+.grid {
+  display:grid;
+  grid-template-columns:
+    repeat(3,1fr);
+  gap:16px;
+  margin-bottom:18px;
+}
+
+.card {
+  background:white;
+  border-radius:18px;
+  padding:22px;
+  box-shadow:
+    0 5px 20px rgba(0,0,0,.05);
+}
+
+.title {
+  color:#6b7280;
+  font-size:14px;
+}
+
+.value {
+  font-size:42px;
+  font-weight:800;
+  margin-top:5px;
+}
+
+.unit {
+  color:#9ca3af;
+  font-size:13px;
+}
+
+.details {
+  display:grid;
+  grid-template-columns:
+    repeat(2,1fr);
+  gap:16px;
+  margin-bottom:18px;
+}
+
+.row {
+  display:flex;
+  justify-content:space-between;
+  padding:12px 0;
+  border-bottom:1px solid #eee;
+}
+
+.chartCard {
+  background:white;
+  border-radius:20px;
+  padding:20px;
+  box-shadow:
+    0 5px 20px rgba(0,0,0,.05);
+}
+
+.chartHeader {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:15px;
+}
+
+.chartHeader h2 {
+  margin:0;
+  font-size:19px;
+}
+
+canvas {
+  width:100%;
+  height:320px;
+}
+
+.legend {
+  margin-top:12px;
+  display:flex;
+  gap:18px;
+  flex-wrap:wrap;
+  font-size:13px;
+  color:#6b7280;
+}
+
+.footer {
+  text-align:center;
+  color:#9ca3af;
+  padding:30px;
+  font-size:13px;
+}
+
+.footer strong {
+  display:block;
+  color:#374151;
+  margin-top:7px;
+}
+
+@media(max-width:700px) {
+
+  .grid {
+    grid-template-columns:1fr;
+  }
+
+  .details {
+    grid-template-columns:1fr;
+  }
+
+  .aqiNumber {
+    font-size:65px;
+  }
+
+  canvas {
+    height:260px;
+  }
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+
+<h1>
+HK Air Quality Monitor
+</h1>
+
+<p>
+Live Internet Dashboard • PMSA003-C
+</p>
+
+</div>
+
+<div class="container">
+
+<div class="status">
+
+<div>
+
+<b>Cloud</b>
+
+<div
+id="cloud"
+class="offline"
+>
+Connecting...
+</div>
+
+</div>
+
+<div>
+
+<b>Last Update</b>
+
+<div id="updated">
+--
+</div>
+
+</div>
+
+<div>
+
+<b>Records</b>
+
+<div id="records">
+--
+</div>
+
+</div>
+
+</div>
+
+<div class="aqi">
+
+<div class="aqiTitle">
+Estimated Particulate AQI
+</div>
+
+<div
+id="aqi"
+class="aqiNumber"
+>
+--
+</div>
+
+<div
+id="category"
+class="category"
+>
+Loading
+</div>
+
+<div class="note">
+Based on PM2.5 + PM10
+</div>
+
+</div>
+
+<div class="grid">
+
+<div class="card">
+
+<div class="title">
+PM2.5
+</div>
+
+<div
+id="pm25"
+class="value"
+>
+--
+</div>
+
+<div class="unit">
+&micro;g/m<sup>3</sup>
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="title">
+PM10
+</div>
+
+<div
+id="pm10"
+class="value"
+>
+--
+</div>
+
+<div class="unit">
+&micro;g/m<sup>3</sup>
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="title">
+PM1.0
+</div>
+
+<div
+id="pm1"
+class="value"
+>
+--
+</div>
+
+<div class="unit">
+&micro;g/m<sup>3</sup>
+</div>
+
+</div>
+
+</div>
+
+<div class="details">
+
+<div class="card">
+
+<h3>
+Current AQI
+</h3>
+
+<div class="row">
+
+<span>
+PM2.5 sub-index
+</span>
+
+<b id="pm25aqi">
+--
+</b>
+
+</div>
+
+<div class="row">
+
+<span>
+PM10 sub-index
+</span>
+
+<b id="pm10aqi">
+--
+</b>
+
+</div>
+
+<div class="row">
+
+<span>
+Dominant pollutant
+</span>
+
+<b id="dominant">
+--
+</b>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h3>
+24-Hour Average
+</h3>
+
+<div class="row">
+
+<span>
+PM2.5
+</span>
+
+<b id="avg25">
+--
+</b>
+
+</div>
+
+<div class="row">
+
+<span>
+PM10
+</span>
+
+<b id="avg10">
+--
+</b>
+
+</div>
+
+<div class="row">
+
+<span>
+24-hour AQI
+</span>
+
+<b id="aqi24">
+--
+</b>
+
+</div>
+
+<div class="row">
+
+<span>
+Status
+</span>
+
+<b id="status24">
+Collecting
+</b>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="chartCard">
+
+<div class="chartHeader">
+
+<h2>
+Last 24 Hours
+</h2>
+
+<span id="chartRecords">
+--
+</span>
+
+</div>
+
+<canvas id="chart"></canvas>
+
+<div class="legend">
+
+<span>
+🔴 PM2.5
+</span>
+
+<span>
+🟠 PM10
+</span>
+
+<span>
+🔵 PM1.0
+</span>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="footer">
+
+24-hour air quality history
+
+<strong>
+Design by HK in India
+</strong>
+
+</div>
+
+<script>
+
+// ==================================================
+// IMPORTANT
+// ==================================================
+//
+// PUT YOUR THINGSPEAK CHANNEL ID HERE
+//
+
+const CHANNEL_ID =
+  "1234567";
+
+// ==================================================
+// THINGSPEAK API
+// ==================================================
+
+const API =
+  "https://api.thingspeak.com/channels/" +
+  CHANNEL_ID +
+  "/feeds.json?results=1440";
+
+
+// ==================================================
+// AQI FUNCTIONS
+// ==================================================
+
+function pm25AQI(c) {
+
+  if (c <= 30)
+    return Math.round(c);
+
+  if (c <= 60)
+    return Math.round(
+      50 +
+      (c - 30) * 50 / 30
+    );
+
+  if (c <= 90)
+    return Math.round(
+      100 +
+      (c - 60) * 100 / 30
+    );
+
+  if (c <= 120)
+    return Math.round(
+      200 +
+      (c - 90) * 100 / 30
+    );
+
+  if (c <= 250)
+    return Math.round(
+      300 +
+      (c - 120) * 100 / 130
+    );
+
+  return Math.min(
+    500,
+    Math.round(
+      400 +
+      (c - 250) * 100 / 250
+    )
+  );
+}
+
+
+function pm10AQI(c) {
+
+  if (c <= 50)
+    return Math.round(c);
+
+  if (c <= 100)
+    return Math.round(
+      50 +
+      (c - 50) * 50 / 50
+    );
+
+  if (c <= 250)
+    return Math.round(
+      100 +
+      (c - 100) * 100 / 150
+    );
+
+  if (c <= 350)
+    return Math.round(
+      200 +
+      (c - 250) * 100 / 100
+    );
+
+  if (c <= 430)
+    return Math.round(
+      300 +
+      (c - 350) * 100 / 80
+    );
+
+  return Math.min(
+    500,
+    Math.round(
+      400 +
+      (c - 430) * 100 / 70
+    )
+  );
+}
+
+
+function category(aqi) {
+
+  if (aqi <= 50)
+    return "Good";
+
+  if (aqi <= 100)
+    return "Satisfactory";
+
+  if (aqi <= 200)
+    return "Moderate";
+
+  if (aqi <= 300)
+    return "Poor";
+
+  if (aqi <= 400)
+    return "Very Poor";
+
+  return "Severe";
+}
+
+
+// ==================================================
+// LOAD CLOUD DATA
+// ==================================================
+
+async function loadData() {
+
+  try {
+
+    const response =
+      await fetch(
+        API +
+        "&_=" +
+        Date.now()
+      );
+
+    if (!response.ok)
+      throw new Error();
+
+    const json =
+      await response.json();
+
+    const feeds =
+      json.feeds || [];
+
+    if (
+      feeds.length === 0
+    ) {
+
+      throw new Error();
+    }
+
+    const latest =
+      feeds[feeds.length - 1];
+
+    const p1 =
+      Number(
+        latest.field1
+      );
+
+    const p25 =
+      Number(
+        latest.field2
+      );
+
+    const p10 =
+      Number(
+        latest.field3
+      );
+
+    const aq25 =
+      pm25AQI(p25);
+
+    const aq10 =
+      pm10AQI(p10);
+
+    const currentAQI =
+      Math.max(
+        aq25,
+        aq10
+      );
+
+    document.getElementById(
+      "pm1"
+    ).textContent =
+      p1;
+
+    document.getElementById(
+      "pm25"
+    ).textContent =
+      p25;
+
+    document.getElementById(
+      "pm10"
+    ).textContent =
+      p10;
+
+    document.getElementById(
+      "aqi"
+    ).textContent =
+      currentAQI;
+
+    document.getElementById(
+      "category"
+    ).textContent =
+      category(
+        currentAQI
+      );
+
+    document.getElementById(
+      "pm25aqi"
+    ).textContent =
+      aq25;
+
+    document.getElementById(
+      "pm10aqi"
+    ).textContent =
+      aq10;
+
+    document.getElementById(
+      "dominant"
+    ).textContent =
+      aq25 >= aq10
+      ? "PM2.5"
+      : "PM10";
+
+    document.getElementById(
+      "cloud"
+    ).textContent =
+      "Online";
+
+    document.getElementById(
+      "cloud"
+    ).className =
+      "online";
+
+    const updated =
+      new Date(
+        latest.created_at
+      );
+
+    document.getElementById(
+      "updated"
+    ).textContent =
+      updated.toLocaleString(
+        [],
+        {
+          day:"2-digit",
+          month:"short",
+          hour:"2-digit",
+          minute:"2-digit",
+          second:"2-digit"
+        }
+      );
+
+    document.getElementById(
+      "records"
+    ).textContent =
+      feeds.length;
+
+    document.getElementById(
+      "chartRecords"
+    ).textContent =
+      feeds.length +
+      " samples";
+
+    calculate24Hour(
+      feeds
+    );
+
+    drawChart(
+      feeds
+    );
+
+  }
+
+  catch(error) {
+
+    document.getElementById(
+      "cloud"
+    ).textContent =
+      "Offline";
+
+    document.getElementById(
+      "cloud"
+    ).className =
+      "offline";
+  }
+}
+
+
+// ==================================================
+// 24-HOUR AVERAGE
+// ==================================================
+
+function calculate24Hour(
+  feeds
+) {
+
+  const now =
+    Date.now();
+
+  const day =
+    24 * 60 * 60 * 1000;
+
+  const last24 =
+    feeds.filter(
+      feed => {
+
+        return (
+          now -
+          new Date(
+            feed.created_at
+          ).getTime()
+        ) <= day;
+      }
+    );
+
+  if (
+    last24.length === 0
+  )
+    return;
+
+  let total25 = 0;
+
+  let total10 = 0;
+
+  last24.forEach(
+    feed => {
+
+      total25 +=
+        Number(
+          feed.field2
+        );
+
+      total10 +=
+        Number(
+          feed.field3
+        );
+    }
+  );
+
+  const avg25 =
+    total25 /
+    last24.length;
+
+  const avg10 =
+    total10 /
+    last24.length;
+
+  const aq25 =
+    pm25AQI(
+      avg25
+    );
+
+  const aq10 =
+    pm10AQI(
+      avg10
+    );
+
+  const aq =
+    Math.max(
+      aq25,
+      aq10
+    );
+
+  document.getElementById(
+    "avg25"
+  ).textContent =
+    avg25.toFixed(1) +
+    " µg/m³";
+
+  document.getElementById(
+    "avg10"
+  ).textContent =
+    avg10.toFixed(1) +
+    " µg/m³";
+
+  document.getElementById(
+    "aqi24"
+  ).textContent =
+    aq;
+
+  document.getElementById(
+    "status24"
+  ).textContent =
+    category(
+      aq
+    );
+}
+
+
+// ==================================================
+// GRAPH
+// ==================================================
+
+function drawChart(
+  feeds
+) {
+
+  const canvas =
+    document.getElementById(
+      "chart"
+    );
+
+  const ctx =
+    canvas.getContext(
+      "2d"
+    );
+
+  const W =
+    canvas.clientWidth;
+
+  const H =
+    canvas.clientHeight;
+
+  const dpr =
+    window.devicePixelRatio ||
+    1;
+
+  canvas.width =
+    W * dpr;
+
+  canvas.height =
+    H * dpr;
+
+  ctx.setTransform(
+    dpr,
+    0,
+    0,
+    dpr,
+    0,
+    0
+  );
+
+  ctx.clearRect(
+    0,
+    0,
+    W,
+    H
+  );
+
+  if (
+    feeds.length < 2
+  )
+    return;
+
+  const left = 48;
+  const right = 12;
+  const top = 15;
+  const bottom = 38;
+
+  const chartW =
+    W -
+    left -
+    right;
+
+  const chartH =
+    H -
+    top -
+    bottom;
+
+  let max =
+    100;
+
+  feeds.forEach(
+    feed => {
+
+      max =
+        Math.max(
+          max,
+          Number(feed.field1),
+          Number(feed.field2),
+          Number(feed.field3)
+        );
+    }
+  );
+
+  max =
+    Math.ceil(
+      max / 20
+    ) * 20;
+
+  // GRID
+
+  for (
+    let i = 0;
+    i <= 5;
+    i++
+  ) {
+
+    const value =
+      max *
+      i /
+      5;
+
+    const y =
+      top +
+      chartH -
+      value /
+      max *
+      chartH;
+
+    ctx.strokeStyle =
+      "#e5e7eb";
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      left,
+      y
+    );
+
+    ctx.lineTo(
+      W - right,
+      y
+    );
+
+    ctx.stroke();
+
+    ctx.fillStyle =
+      "#9ca3af";
+
+    ctx.font =
+      "11px Arial";
+
+    ctx.textAlign =
+      "right";
+
+    ctx.fillText(
+      Math.round(value),
+      left - 7,
+      y + 4
+    );
+  }
+
+  // TIME LABELS
+
+  const labels =
+    Math.min(
+      6,
+      feeds.length
+    );
+
+  for (
+    let i = 0;
+    i < labels;
+    i++
+  ) {
+
+    const index =
+      Math.floor(
+        i *
+        (feeds.length - 1) /
+        (labels - 1 || 1)
+      );
+
+    const date =
+      new Date(
+        feeds[index].created_at
+      );
+
+    const x =
+      left +
+      index /
+      (feeds.length - 1) *
+      chartW;
+
+    ctx.fillStyle =
+      "#9ca3af";
+
+    ctx.font =
+      "11px Arial";
+
+    ctx.textAlign =
+      "center";
+
+    ctx.fillText(
+      date.toLocaleTimeString(
+        [],
+        {
+          hour:"2-digit",
+          minute:"2-digit"
+        }
+      ),
+      x,
+      H - 10
+    );
+  }
+
+  // LINE FUNCTION
+
+  function line(
+    field,
+    lineColor
+  ) {
+
+    ctx.strokeStyle =
+      lineColor;
+
+    ctx.lineWidth =
+      2;
+
+    ctx.beginPath();
+
+    feeds.forEach(
+      (feed,i) => {
+
+        const value =
+          Number(
+            feed[field]
+          );
+
+        const x =
+          left +
+          i /
+          (feeds.length - 1) *
+          chartW;
+
+        const y =
+          top +
+          chartH -
+          value /
+          max *
+          chartH;
+
+        if (
+          i === 0
+        ) {
+
+          ctx.moveTo(
+            x,
+            y
+          );
+
+        } else {
+
+          ctx.lineTo(
+            x,
+            y
+          );
+        }
+      }
+    );
+
+    ctx.stroke();
+  }
+
+  line(
+    "field2",
+    "#ef4444"
+  );
+
+  line(
+    "field3",
+    "#f59e0b"
+  );
+
+  line(
+    "field1",
+    "#3b82f6"
+  );
+}
+
+
+// ==================================================
+// REFRESH
+// ==================================================
+
+loadData();
+
+/*
+ThingSpeak doesn't need to be
+requested every 2 seconds.
+
+10 seconds gives a responsive
+dashboard without hammering the API.
+*/
+
+setInterval(
+  loadData,
+  10000
+);
+
+window.addEventListener(
+  "resize",
+  loadData
+);
+
+</script>
+
+</body>
+
+</html>
